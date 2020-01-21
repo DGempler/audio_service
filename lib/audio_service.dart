@@ -226,7 +226,7 @@ class MediaItem {
   final String genre;
 
   /// The duration in milliseconds
-  final int duration;
+  int duration;
 
   /// The artwork for this media item as a uri
   final String artUri;
@@ -246,7 +246,7 @@ class MediaItem {
   /// The rating of the MediaItem.
   final Rating rating;
 
-  const MediaItem({
+  MediaItem({
     @required this.id,
     @required this.album,
     @required this.title,
