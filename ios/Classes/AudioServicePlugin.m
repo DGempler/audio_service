@@ -59,19 +59,14 @@ static MPMediaItemArtwork* artwork = nil;
   //   for the client instance and the background instance so that methods
   //   can't be called on the wrong instance.
   if ([@"connect" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin connect");
     long long msSinceEpoch = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
     // Notify client of state on subscribing.
     if (state == nil) {
-      NSLog(@"AudioServicePlugin connect state was nil");
       state = [NSNumber numberWithInt: 0];
       position = @(0);
       updateTime = [NSNumber numberWithLongLong: msSinceEpoch];
       speed = [NSNumber numberWithDouble: 1.0];
-    } else {
-      NSLog(@"AudioServicePlugin connect state WAS NOT nil");
     }
-    NSLog(@"AudioServicePlugin connect about to call onPlaybackStateChanged");
     [channel invokeMethod:@"onPlaybackStateChanged" arguments:@[
       // state
       state,
@@ -84,22 +79,13 @@ static MPMediaItemArtwork* artwork = nil;
       // update time since epoch
       updateTime
     ]];
-    if (mediaItem == nil) {
-      NSLog(@"AudioServicePlugin connect about to call onMediaChanged, mediaItem is nil");
-    } else {
-      NSString* title = mediaItem[@"title"];
-      NSLog(@"AudioServicePlugin connect about to call onMediaChanged, mediaItem is not nil: %@", title);
-    }
     [channel invokeMethod:@"onMediaChanged" arguments:@[mediaItem ? mediaItem : [NSNull null]]];
-    NSLog(@"AudioServicePlugin connect about to call onQueueChanged");
     [channel invokeMethod:@"onQueueChanged" arguments:@[queue ? queue : [NSNull null]]];
 
     result(nil);
   } else if ([@"disconnect" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin disconnect");
     result(nil);
   } else if ([@"start" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin start");
     if (_running) {
       result(@NO);
       return;
@@ -162,12 +148,10 @@ static MPMediaItemArtwork* artwork = nil;
     [commandCenter.dislikeCommand setEnabled:NO];
     [commandCenter.bookmarkCommand setEnabled:NO];
   } else if ([@"ready" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin ready");
     result(@YES);
     startResult(@YES);
     startResult = nil;
   } else if ([@"stopped" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin stopped");
     _running = NO;
     [channel invokeMethod:@"onStopped" arguments:nil];
     [[AVAudioSession sharedInstance] setActive: NO error: nil];
@@ -193,7 +177,6 @@ static MPMediaItemArtwork* artwork = nil;
     [commandCenter.skipForwardCommand removeTarget:nil];
     [commandCenter.skipBackwardCommand removeTarget:nil];
     [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nil;
-    NSLog(@"AudioServicePlugin stopped nil-ing everything");
     state = nil;
     position = nil;
     updateTime = nil;
@@ -204,85 +187,65 @@ static MPMediaItemArtwork* artwork = nil;
     startResult = nil;
     result(@YES);
   } else if ([@"isRunning" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin isRunning");
     if (_running) {
       result(@YES);
     } else {
       result(@NO);
     }
   } else if ([@"setBrowseMediaParent" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin setBrowseMediaParent");
     result(@YES);
   } else if ([@"addQueueItem" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin addQueueItem");
     [backgroundChannel invokeMethod:@"onAddQueueItem" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"addQueueItemAt" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin addQueueItemAt");
     [backgroundChannel invokeMethod:@"onAddQueueItemAt" arguments:call.arguments];
     result(@YES);
   } else if ([@"removeQueueItem" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin removeQueueItem");
     [backgroundChannel invokeMethod:@"onRemoveQueueItem" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"click" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin click");
     [backgroundChannel invokeMethod:@"onClick" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"prepare" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin prepare");
     [backgroundChannel invokeMethod:@"onPrepare" arguments:nil];
     result(@YES);
   } else if ([@"prepareFromMediaId" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin prepareFromMediaId");
     [backgroundChannel invokeMethod:@"onPrepareFromMediaId" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"play" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin play");
     [self play: nil];
     result(@YES);
   } else if ([@"playFromMediaId" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin playFromMediaId");
     [backgroundChannel invokeMethod:@"onPlayFromMediaId" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"skipToQueueItem" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin skipToQueueItem");
     [backgroundChannel invokeMethod:@"onSkipToQueueItem" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"pause" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin pause");
     [self pause: nil];
     result(@YES);
   } else if ([@"stop" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin stop");
     [backgroundChannel invokeMethod:@"onStop" arguments:nil];
     result(@YES);
   } else if ([@"seekTo" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin seekTo");
     [backgroundChannel invokeMethod:@"onSeekTo" arguments:@[call.arguments]];
     result(@YES);
   } else if ([@"skipToNext" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin skipToNext");
     [backgroundChannel invokeMethod:@"onSkipToNext" arguments:nil];
     result(@YES);
   } else if ([@"skipToPrevious" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin skipToPrevious");
     [backgroundChannel invokeMethod:@"onSkipToPrevious" arguments:nil];
     result(@YES);
   } else if ([@"fastForward" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin fastForward");
     [backgroundChannel invokeMethod:@"onFastForward" arguments:nil];
     result(@YES);
   } else if ([@"rewind" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin rewind");
     [backgroundChannel invokeMethod:@"onRewind" arguments:nil];
     result(@YES);
   } else if ([@"setRating" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin setRating");
     [backgroundChannel invokeMethod:@"onSetRating" arguments:@[call.arguments, [NSNull null]]];
     result(@YES);
   } else if ([@"setState" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin setState");
     long long msSinceEpoch;
     if (call.arguments[5] != [NSNull null]) {
       msSinceEpoch = [call.arguments[5] longLongValue];
@@ -293,7 +256,6 @@ static MPMediaItemArtwork* artwork = nil;
     position = call.arguments[3];
     updateTime = [NSNumber numberWithLongLong: msSinceEpoch];
     speed = call.arguments[4];
-    NSLog(@"AudioServicePlugin setState about to call onPlaybackStateChanged");
     [channel invokeMethod:@"onPlaybackStateChanged" arguments:@[
       // state
       state,
@@ -306,22 +268,17 @@ static MPMediaItemArtwork* artwork = nil;
       // update time since epoch
       updateTime
     ]];
-    NSLog(@"AudioServicePlugin setState about to call updateNowPlayingInfo");
     [self updateNowPlayingInfo];
     result(@(YES));
   } else if ([@"setQueue" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin setQueue");
     queue = call.arguments;
-    NSLog(@"AudioServicePlugin setQueue about to call onQueueChanged");
     [channel invokeMethod:@"onQueueChanged" arguments:@[queue]];
     result(@YES);
   } else if ([@"setMediaItem" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin setMediaItem");
     mediaItem = call.arguments;
     NSString* artUri = mediaItem[@"artUri"];
     artwork = nil;
     if (![artUri isEqual: [NSNull null]]) {
-      NSLog(@"AudioServicePlugin setMediaItem artUri not null");
       NSString* artCacheFilePath = [NSNull null];
       NSDictionary* extras = mediaItem[@"extras"];
       if (![extras isEqual: [NSNull null]]) {
@@ -334,19 +291,14 @@ static MPMediaItemArtwork* artwork = nil;
         }
       }
     }
-    NSLog(@"AudioServicePlugin setMediaItem dispatch_async about to updateNowPlayingInfo");
     [self updateNowPlayingInfo];
-    NSLog(@"AudioServicePlugin setMediaItem about to call onMediaChanged");
     [channel invokeMethod:@"onMediaChanged" arguments:@[call.arguments]];
     result(@(YES));
   } else if ([@"notifyChildrenChanged" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin notifyChildrenChanged");
     result(@YES);
   } else if ([@"androidForceEnableMediaButtons" isEqualToString:call.method]) {
-    NSLog(@"AudioServicePlugin androidForceEnableMediaButtons");
     result(@YES);
   } else {
-    NSLog(@"AudioServicePlugin else/other");
     // TODO: Check if this implementation is correct.
     // Can I just pass on the result as the last argument?
     [backgroundChannel invokeMethod:call.method arguments:call.arguments result: result];
@@ -354,19 +306,18 @@ static MPMediaItemArtwork* artwork = nil;
 }
 
 - (MPRemoteCommandHandlerStatus) play: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin play");
+  NSLog(@"play");
   [backgroundChannel invokeMethod:@"onPlay" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) pause: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin pause");
+  NSLog(@"pause");
   [backgroundChannel invokeMethod:@"onPause" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (void) updateNowPlayingInfo {
-  NSLog(@"AudioServicePlugin updateNowPlayingInfo");
   NSMutableDictionary *nowPlayingInfo = [NSMutableDictionary new];
   if (mediaItem) {
     nowPlayingInfo[MPMediaItemPropertyTitle] = mediaItem[@"title"];
@@ -385,43 +336,43 @@ static MPMediaItemArtwork* artwork = nil;
 }
 
 - (MPRemoteCommandHandlerStatus) togglePlayPause: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin togglePlayPause");
+  NSLog(@"togglePlayPause");
   [backgroundChannel invokeMethod:@"onClick" arguments:@[@(0)]];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) stop: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin stop");
+  NSLog(@"stop");
   [backgroundChannel invokeMethod:@"onStop" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) nextTrack: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin nextTrack");
+  NSLog(@"nextTrack");
   [backgroundChannel invokeMethod:@"onSkipToNext" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) previousTrack: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin previousTrack");
+  NSLog(@"previousTrack");
   [backgroundChannel invokeMethod:@"onSkipToPrevious" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) changePlaybackPosition: (MPChangePlaybackPositionCommandEvent *) event {
-  NSLog(@"AudioServicePlugin changePlaybackPosition");
+  NSLog(@"changePlaybackPosition");
   [backgroundChannel invokeMethod:@"onSeekTo" arguments: @[@((long long) (event.positionTime * 1000))]];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) skipForward: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin skipForward");
+  NSLog(@"skipForward");
   [backgroundChannel invokeMethod:@"onFastForward" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
 
 - (MPRemoteCommandHandlerStatus) skipBackward: (MPRemoteCommandEvent *) event {
-  NSLog(@"AudioServicePlugin skipBackward");
+  NSLog(@"skipBackward");
   [backgroundChannel invokeMethod:@"onRewind" arguments:nil];
   return MPRemoteCommandHandlerStatusSuccess;
 }
