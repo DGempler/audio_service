@@ -446,6 +446,7 @@ class AudioService {
   /// [disconnect] should be called when your UI is no longer visible. All
   /// other methods in this class will work only while connected.
   static Future<void> connect() async {
+    print('AudioService connect');
     _channel.setMethodCallHandler((MethodCall call) async {
       switch (call.method) {
         case 'onChildrenLoaded':
@@ -457,6 +458,7 @@ class AudioService {
           // If this event arrives too late, ignore it.
           if (_afterStop) return;
           final List args = call.arguments;
+          print('AudioService onPlaybackStateChanged basicState: ${BasicPlaybackState.values[args[0]].toString()} position: ${args[2]} updateTime ${args[4]}');
           int actionBits = args[1];
           _playbackState = PlaybackState(
             basicState: BasicPlaybackState.values[args[0]],
@@ -470,12 +472,14 @@ class AudioService {
           _playbackStateSubject.add(_playbackState);
           break;
         case 'onMediaChanged':
+          print('AudioService onMediaChanged');
           _currentMediaItem = call.arguments[0] != null
               ? _raw2mediaItem(call.arguments[0])
               : null;
           _currentMediaItemSubject.add(_currentMediaItem);
           break;
         case 'onQueueChanged':
+          print('AudioService onQueueChanged');
           final List<Map> args = call.arguments[0] != null
               ? List<Map>.from(call.arguments[0])
               : null;
@@ -483,6 +487,7 @@ class AudioService {
           _queueSubject.add(_queue);
           break;
         case 'onStopped':
+          print('AudioService onStopped');
           _browseMediaChildren = null;
           _browseMediaChildrenSubject.add(null);
           _playbackState = null;
@@ -496,6 +501,7 @@ class AudioService {
           break;
       }
     });
+    print('AudioService connect about to invoke connect on channel');
     await _channel.invokeMethod("connect");
     _running = await _channel.invokeMethod("isRunning");
     _connected = true;
@@ -505,6 +511,7 @@ class AudioService {
   ///
   /// This method should be called when the UI is no longer visible.
   static Future<void> disconnect() async {
+    print('AudioService disconnect');
     _channel.setMethodCallHandler(null);
     await _channel.invokeMethod("disconnect");
     _connected = false;
@@ -552,6 +559,7 @@ class AudioService {
     int fastForwardInterval = 0,
     int rewindInterval = 0,
   }) async {
+    print('AudioService start');
     if (_running) return false;
     _running = true;
     _afterStop = false;
@@ -664,6 +672,7 @@ class AudioService {
 
   /// Passes through to `onStop` in the background task.
   static Future<void> stop() async {
+    print('AudioService stop');
     await _channel.invokeMethod('stop');
   }
 
@@ -674,7 +683,9 @@ class AudioService {
 
   /// Passes through to `onSkipToNext` in the background task.
   static Future<void> skipToNext() async {
+    print('AudioService.dart about to call skipToNext on background channel');
     await _channel.invokeMethod('skipToNext');
+    print('AudioService.dart done awaiting skipToNext on background channel');
   }
 
   /// Passes through to `onSkipToPrevious` in the background task.
@@ -745,6 +756,7 @@ class AudioServiceBackground {
   /// of the task, as well as any requests by the client to play, pause and
   /// otherwise control audio playback.
   static Future<void> run(BackgroundAudioTask taskBuilder()) async {
+    print('AudioService.dart run');
     _backgroundChannel =
         const MethodChannel('ryanheise.com/audioServiceBackground');
     WidgetsFlutterBinding.ensureInitialized();
@@ -846,10 +858,13 @@ class AudioServiceBackground {
           break;
       }
     });
+    print('AudioService.dart about to call ready on background channel');
     await _backgroundChannel.invokeMethod('ready');
     await task.onStart();
+    print('AudioService.dart about to call stopped on background channel');
     await _backgroundChannel.invokeMethod('stopped');
     if (Platform.isIOS) {
+      print('AudioService.dart about to kill flutterIsolate if not null, was null: ${AudioService._flutterIsolate == null}');
       AudioService._flutterIsolate?.kill();
     }
     _backgroundChannel.setMethodCallHandler(null);
@@ -885,6 +900,7 @@ class AudioServiceBackground {
     int updateTime,
     List<int> androidCompactActions,
   }) async {
+    print('AudioService.dart setState basicState: ${basicState.toString()} position: $position updateTime: $updateTime');
     _state = PlaybackState(
       basicState: basicState,
       actions: controls.map((control) => control.action).toSet(),
@@ -901,6 +917,7 @@ class AudioServiceBackground {
         .toList();
     final rawSystemActions =
         systemActions.map((action) => action.index).toList();
+    print('AudioService.dart about to call setState on background channel');
     await _backgroundChannel.invokeMethod('setState', [
       rawControls,
       rawSystemActions,
@@ -910,16 +927,19 @@ class AudioServiceBackground {
       updateTime,
       androidCompactActions
     ]);
+    print('AudioService.dart done awaiting setState on background channel');
   }
 
   /// Sets the current queue and notifies all clients.
   static Future<void> setQueue(List<MediaItem> queue) async {
+    print('AudioService.dart about to call setQueue on background channel');
     await _backgroundChannel.invokeMethod(
         'setQueue', queue.map(_mediaItem2raw).toList());
   }
 
   /// Sets the currently playing media item and notifies all clients.
   static Future<void> setMediaItem(MediaItem mediaItem) async {
+    print('AudioService.dart setMediaItem');
     _mediaItem = mediaItem;
     if (mediaItem.artUri != null) {
       // We potentially need to fetch the art.
@@ -944,6 +964,7 @@ class AudioServiceBackground {
       await _backgroundChannel.invokeMethod(
           'setMediaItem', _mediaItem2raw(platformMediaItem));
     } else {
+      print('AudioService.dart setMediaItem about to call setMediaItem on background channel');
       await _backgroundChannel.invokeMethod(
           'setMediaItem', _mediaItem2raw(mediaItem));
     }
@@ -955,6 +976,7 @@ class AudioServiceBackground {
   /// If [parentMediaId] is unspecified, the root parent will be used.
   static Future<void> notifyChildrenChanged(
       [String parentMediaId = AudioService.MEDIA_ROOT_ID]) async {
+        print('AudioService.dart about to call notifyChildrenChanged on background channel');
     await _backgroundChannel.invokeMethod(
         'notifyChildrenChanged', parentMediaId);
   }
@@ -970,6 +992,7 @@ class AudioServiceBackground {
   /// such as music because this kind of "normal" audio playback will
   /// automatically qualify your app to receive media button events.
   static Future<void> androidForceEnableMediaButtons() async {
+    print('AudioService.dart about to call androidForceEnableMediaButtons on background channel');
     await _backgroundChannel.invokeMethod('androidForceEnableMediaButtons');
   }
 }
